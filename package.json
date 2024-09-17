@@ -1,11 +1,11 @@
 {
-  "name": "com.toru-toruto.unitygltf-importfromcloudstorage",
-  "displayName": "UnityGLTF-ImportFromCloudStorage",
+  "name": "com.toru-toruto.unitygltf-importfromfirebasestorage",
+  "displayName": "UnityGLTF-ImportFromFirebaseStorage",
   "version": "2.13.0",
   "unity": "2020.3",
   "description": "Import and export glTF 2.0 assets, both in the editor and at runtime. Excellent support for animations, materials, extensions. Can be extended with plugins for both import and export use cases.",
   "repository": {
-    "url": "https://github.com/tobira-project/UnityGLTF-ImportFromCloudStorage.git"
+    "url": "https://github.com/tobira-project/UnityGLTF-ImportFromFirebaseStorage.git"
   },
   "keywords": [
     "gltf",
