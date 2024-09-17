@@ -32,14 +32,14 @@ namespace UnityGLTF
 			public Nullable<int> TexCoordExtra = 0;
 		}
 
-		private async Task CreateNotReferencedTexture(int index)
+		private async Task CreateNotReferencedTexture(int index, bool importFromFirebaseStorage)
 		{
 			if (Root.Textures[index].Source != null
-			    && Root.Images.Count > 0
-			    && Root.Images.Count > Root.Textures[index].Source.Id
-			    && string.IsNullOrEmpty(Root.Textures[index].Source.Value.Uri))
+					&& Root.Images.Count > 0
+					&& Root.Images.Count > Root.Textures[index].Source.Id
+					&& string.IsNullOrEmpty(Root.Textures[index].Source.Value.Uri))
 			{
-				await ConstructImageBuffer(Root.Textures[index], index);
+				await ConstructImageBuffer(Root.Textures[index], index, importFromFirebaseStorage);
 				await ConstructTexture(Root.Textures[index], index, !KeepCPUCopyOfTexture, true, false);
 			}
 		}
@@ -110,7 +110,7 @@ namespace UnityGLTF
 			}
 		}
 
-		protected async Task ConstructImageBuffer(GLTFTexture texture, int textureIndex)
+		protected async Task ConstructImageBuffer(GLTFTexture texture, int textureIndex, bool importFromFirebaseStorage)
 		{
 			int sourceId = GetTextureSourceId(texture);
 			if (_assetCache.ImageStreamCache[sourceId] == null)
@@ -120,7 +120,7 @@ namespace UnityGLTF
 				// we only load the streams if not a base64 uri, meaning the data is in the uri
 				if (image.Uri != null && !URIHelper.IsBase64Uri(image.Uri))
 				{
-					_assetCache.ImageStreamCache[sourceId] = await _options.DataLoader.LoadStreamAsync(image.Uri);
+					_assetCache.ImageStreamCache[sourceId] = await _options.DataLoader.LoadStreamAsync(image.Uri, importFromFirebaseStorage);
 				}
 				else if (image.Uri == null && image.BufferView != null && _assetCache.BufferCache[image.BufferView.Value.Buffer.Id] == null)
 				{
@@ -153,7 +153,7 @@ namespace UnityGLTF
 					break;
 				case "image/ktx2":
 					string textureName = texture.name;
-					
+
 #if HAVE_KTX
 					if (Context.TryGetPlugin<Ktx2ImportContext>(out _))
 					{
@@ -212,7 +212,7 @@ namespace UnityGLTF
 				BuildTargetGroup activeTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
 #if UNITY_2023_1_OR_NEWER
 				if (PlayerSettings.GetNormalMapEncoding(NamedBuildTarget.FromBuildTargetGroup(activeTargetGroup)) == NormalMapEncoding.DXT5nm)
-#else				
+#else
 				if (PlayerSettings.GetNormalMapEncoding(activeTargetGroup) == NormalMapEncoding.DXT5nm)
 #endif
 				{
@@ -265,7 +265,7 @@ namespace UnityGLTF
 				// This way here we'll get into weird code for Runtime import, as we would still import mock textures...
 				// Or we add another option to avoid that.
 				texture = null;
-				Debug.Log(LogType.Error, "Buffer file " + invalidStream.RelativeFilePath + " not found in path: " + invalidStream.AbsoluteFilePath+ $" (File: {_gltfFileName})");
+				Debug.Log(LogType.Error, "Buffer file " + invalidStream.RelativeFilePath + " not found in path: " + invalidStream.AbsoluteFilePath + $" (File: {_gltfFileName})");
 			}
 			else
 			if (_nativeBuffers.TryGetValue(stream, out var nativeData))
@@ -295,7 +295,7 @@ namespace UnityGLTF
 				{
 					throw new Exception($"Stream is larger than can be copied into byte array (File: {_gltfFileName})");
 				}
-				
+
 				stream.Read(buffer, 0, (int)stream.Length);
 				await YieldOnTimeoutAndThrowOnLowMemory();
 				using (NativeArray<byte> bufferNative = new NativeArray<byte>(buffer, Allocator.TempJob))
@@ -309,7 +309,7 @@ namespace UnityGLTF
 				texture = await NormalMapEncodingConverter.ConvertToDxt5nmAndCheckTextureFormatAsync(texture);
 				if (texture != newTextureObject)
 					newTextureObject = texture;
-				
+
 				texture.Apply();
 			}
 
@@ -352,7 +352,7 @@ namespace UnityGLTF
 		/// <param name="markGpuOnly">Whether the texture is GPU only, instead of keeping a CPU copy</param>
 		/// <param name="isLinear">Whether the texture is linear rather than sRGB</param>
 		/// <returns>The loading task</returns>
-		public virtual async Task LoadTextureAsync(GLTFTexture texture, int textureIndex, bool markGpuOnly, bool isLinear)
+		public virtual async Task LoadTextureAsync(GLTFTexture texture, int textureIndex, bool markGpuOnly, bool isLinear, bool importFromFirebaseStorage)
 		{
 			try
 			{
@@ -381,7 +381,7 @@ namespace UnityGLTF
 					_assetCache = new AssetCache(_gltfRoot);
 				}
 
-				await ConstructImageBuffer(texture, textureIndex);
+				await ConstructImageBuffer(texture, textureIndex, importFromFirebaseStorage);
 				await ConstructTexture(texture, textureIndex, markGpuOnly, isLinear, false);
 			}
 			finally
@@ -394,9 +394,9 @@ namespace UnityGLTF
 			}
 		}
 
-		public virtual Task LoadTextureAsync(GLTFTexture texture, int textureIndex, bool isLinear)
+		public virtual Task LoadTextureAsync(GLTFTexture texture, int textureIndex, bool isLinear, bool importFromFirebaseStorage)
 		{
-			return LoadTextureAsync(texture, textureIndex, !KeepCPUCopyOfTexture, isLinear);
+			return LoadTextureAsync(texture, textureIndex, !KeepCPUCopyOfTexture, isLinear, importFromFirebaseStorage);
 		}
 
 		/// <summary>
@@ -425,9 +425,9 @@ namespace UnityGLTF
 			{
 				int sourceId = GetTextureSourceId(texture);
 				GLTFImage image = _gltfRoot.Images[sourceId];
-				
+
 				bool isFirstInstance = _assetCache.ImageCache[sourceId] == null;
-				
+
 				await ConstructImage(image, sourceId, markGpuOnly, isLinear, isNormal);
 
 				var source = _assetCache.ImageCache[sourceId];
@@ -454,7 +454,7 @@ namespace UnityGLTF
 							desiredFilterMode = FilterMode.Trilinear;
 							break;
 						default:
-							Debug.Log(LogType.Warning, "Unsupported Sampler.MinFilter: " + sampler.MinFilter+ $" (File: {_gltfFileName})");
+							Debug.Log(LogType.Warning, "Unsupported Sampler.MinFilter: " + sampler.MinFilter + $" (File: {_gltfFileName})");
 							desiredFilterMode = FilterMode.Bilinear;
 							break;
 					}
@@ -470,7 +470,7 @@ namespace UnityGLTF
 							case GLTF.Schema.WrapMode.MirroredRepeat:
 								return TextureWrapMode.Mirror;
 							default:
-								Debug.Log(LogType.Warning, "Unsupported Sampler.Wrap: " + gltfWrapMode+ $" (File: {_gltfFileName})");
+								Debug.Log(LogType.Warning, "Unsupported Sampler.Wrap: " + gltfWrapMode + $" (File: {_gltfFileName})");
 								return TextureWrapMode.Repeat;
 						}
 					}
@@ -489,18 +489,18 @@ namespace UnityGLTF
 				{
 					source.filterMode = desiredFilterMode;
 					source.wrapModeU = desiredWrapModeS;
-					source.wrapModeV = desiredWrapModeT;		
+					source.wrapModeV = desiredWrapModeT;
 				}
 
 				var matchSamplerState = source.filterMode == desiredFilterMode && source.wrapModeU == desiredWrapModeS && source.wrapModeV == desiredWrapModeT;
 				if (matchSamplerState || markGpuOnly)
 				{
-					if (_assetCache.TextureCache[textureIndex].Texture != null) Debug.Log(LogType.Assert, "Texture should not be reset to prevent memory leaks"+ $" (File: {_gltfFileName})");
+					if (_assetCache.TextureCache[textureIndex].Texture != null) Debug.Log(LogType.Assert, "Texture should not be reset to prevent memory leaks" + $" (File: {_gltfFileName})");
 					_assetCache.TextureCache[textureIndex].Texture = source;
 
 					if (!matchSamplerState)
 					{
-						Debug.Log(LogType.Warning, $"Ignoring sampler; filter mode: source {source.filterMode}, desired {desiredFilterMode}; wrap mode: source {source.wrapModeU}x{source.wrapModeV}, desired {desiredWrapModeS}x{desiredWrapModeT}"+ $" (File: {_gltfFileName})");
+						Debug.Log(LogType.Warning, $"Ignoring sampler; filter mode: source {source.filterMode}, desired {desiredFilterMode}; wrap mode: source {source.wrapModeU}x{source.wrapModeV}, desired {desiredWrapModeS}x{desiredWrapModeT}" + $" (File: {_gltfFileName})");
 					}
 				}
 				else

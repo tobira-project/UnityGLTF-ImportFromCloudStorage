@@ -22,9 +22,11 @@ namespace UnityGLTF
 			return partialPath;
 		}
 
-		public static string GetFileFromUri(Uri uri)
+		public static string GetFileFromUri(Uri uri, bool importFromFirebaseStorage = true)
 		{
-			return uri.Segments[uri.Segments.Length - 1];
+			return importFromFirebaseStorage
+				? GetFileNameWithEncodedSlash(uri.AbsoluteUri)
+				: uri.Segments[uri.Segments.Length - 1];
 		}
 
 		/// <summary>
@@ -32,10 +34,13 @@ namespace UnityGLTF
 		/// </summary>
 		/// <param name="fullPath">Full path of a file</param>
 		/// <returns>The name of directory file is in</returns>
-		public static string GetDirectoryName(string fullPath)
+		public static string GetDirectoryName(string fullPath, bool importFromFirebaseStorage = true)
 		{
-			var fileName = Path.GetFileName(fullPath);
-			return fullPath.Substring(0, fullPath.Length - fileName.Length);
+			var fileName = importFromFirebaseStorage
+				? GetFileNameWithEncodedSlash(fullPath)
+				: Path.GetFileName(fullPath);
+			var dirName = fullPath.Substring(0, fullPath.Length - fileName.Length);
+			return dirName;
 		}
 
 		/// <summary>
@@ -65,6 +70,21 @@ namespace UnityGLTF
 			Regex regex = new Regex(Base64StringInitializer);
 			Match match = regex.Match(uri);
 			return match.Success;
+		}
+
+		private static string GetFileNameWithEncodedSlash(string fullPath)
+		{
+			var encodedSlash = "%2F";
+
+			var lastSlash = fullPath.LastIndexOf('/');
+			var lastEncodedSlash = fullPath.LastIndexOf(encodedSlash);
+
+			return lastEncodedSlash > lastSlash
+				? fullPath.Substring(
+						lastEncodedSlash + encodedSlash.Length,
+						fullPath.Length - (lastEncodedSlash + encodedSlash.Length)
+					)
+				: Path.GetFileName(fullPath);
 		}
 	}
 }

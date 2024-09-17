@@ -28,7 +28,7 @@ namespace UnityGLTF.Loader
 			baseAddress = new Uri(rootUri);
 		}
 
-		public async Task<Stream> LoadStreamAsync(string gltfFilePath)
+		public async Task<Stream> LoadStreamAsync(string gltfFilePath, bool importFromFirebaseStorage = false)
 		{
 			if (gltfFilePath == null)
 			{
@@ -38,11 +38,12 @@ namespace UnityGLTF.Loader
 			HttpResponseMessage response;
 			try
 			{
+				var uri = new Uri(baseAddress, gltfFilePath);
 #if WINDOWS_UWP
-				response = await httpClient.GetAsync(new Uri(baseAddress, gltfFilePath));
+				response = await httpClient.GetAsync(uri);
 #else
 				var tokenSource = new CancellationTokenSource(30000);
-				response = await httpClient.GetAsync(new Uri(baseAddress, gltfFilePath), tokenSource.Token);
+				response = await httpClient.GetAsync(uri, tokenSource.Token);
 #endif
 			}
 			catch (TaskCanceledException)
@@ -77,7 +78,7 @@ namespace UnityGLTF.Loader
 			// If there are errors in the certificate chain, look at each error to determine the cause.
 			if (errors != SslPolicyErrors.None)
 			{
-				for (int i = 0; i<chain.ChainStatus.Length; i++)
+				for (int i = 0; i < chain.ChainStatus.Length; i++)
 				{
 					if (chain.ChainStatus[i].Status != X509ChainStatusFlags.RevocationStatusUnknown)
 					{

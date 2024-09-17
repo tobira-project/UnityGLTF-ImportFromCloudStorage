@@ -14,11 +14,19 @@ namespace UnityGLTF.Loader
 			this.dir = dir;
 		}
 #if UNITY_WEBREQUEST
-		public async Task<Stream> LoadStreamAsync(string relativeFilePath)
+		public async Task<Stream> LoadStreamAsync(string relativeFilePath, bool importFromFirebaseStorage = false)
 		{
-			var path = Path.Combine(dir, relativeFilePath).Replace("\\","/");
+			var extension = Path.GetExtension(relativeFilePath);
+			var isModelFile = extension == ".gltf" || extension == ".glb";
+			var query = isModelFile || relativeFilePath.Contains("?alt=media") ? "" : "?alt=media";
+			var path = importFromFirebaseStorage && dir.EndsWith("%2F")
+				?	dir + relativeFilePath + query
+				: Path.Combine(dir, relativeFilePath);
+			path = path.Replace("\\", "/");
+
 			if (File.Exists(path))
 				path = "file://" + Path.GetFullPath(path);
+
 			var request = UnityWebRequest.Get(path);
 			// request.downloadHandler = new DownloadStreamHandler(new byte[1024 * 1024]);
 			var asyncOperation = request.SendWebRequest();
@@ -42,7 +50,7 @@ namespace UnityGLTF.Loader
 			return stream;
 		}
 #else
-		public async Task<Stream> LoadStreamAsync(string relativeFilePath)
+		public async Task<Stream> LoadStreamAsync(string relativeFilePath, bool importFromFirebaseStorage = false)
 		{
 			await Task.CompletedTask;
 			throw new System.ApplicationException("The module com.unity.modules.unitywebrequest is required for this functionality. Please install it in your project.");

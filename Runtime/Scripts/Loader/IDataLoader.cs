@@ -5,6 +5,6 @@ namespace UnityGLTF.Loader
 {
 	public interface IDataLoader
 	{
-		Task<Stream> LoadStreamAsync(string relativeFilePath);
+		Task<Stream> LoadStreamAsync(string relativeFilePath, bool importFromFirebaseStorage = false);
 	}
 }
