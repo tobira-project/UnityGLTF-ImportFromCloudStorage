@@ -209,7 +209,7 @@ namespace UnityGLTF
 		        if (!File.Exists(Path.Combine(dir, uri)))
 			        uri = Uri.UnescapeDataString(uri);
 		        if (File.Exists(combinedPath))
-					dependencies.Add(combinedPath);
+							dependencies.Add(combinedPath);
 		        // TODO check if inside the project/any package, could be an absolute path
 		        else if (File.Exists(uri))
 			        dependencies.Add(uri);
@@ -875,9 +875,9 @@ namespace UnityGLTF
 	        BuildTargetGroup activeTargetGroup = BuildPipeline.GetBuildTargetGroup(EditorUserBuildSettings.activeBuildTarget);
 #if UNITY_2023_1_OR_NEWER
 	        var normalEncoding = PlayerSettings.GetNormalMapEncoding(NamedBuildTarget.FromBuildTargetGroup(activeTargetGroup));
-#else				
+#else
 			var normalEncoding = PlayerSettings.GetNormalMapEncoding(activeTargetGroup);
-#endif	        
+#endif
 	        
 			AssetDatabase.RegisterCustomDependency(NormalMapEncodingDependency, Hash128.Compute((int) normalEncoding));
         }

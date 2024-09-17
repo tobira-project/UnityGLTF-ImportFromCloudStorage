@@ -12,7 +12,7 @@ namespace UnityGLTF
 	public partial class GLTFSceneImporter
 	{
 		internal static List<Texture> _runtimeNormalTextures = new List<Texture>();
-		
+
 		protected virtual async Task ConstructMaterial(GLTFMaterial def, int materialIndex)
 		{
 			IUniformMap mapper;
@@ -87,7 +87,7 @@ namespace UnityGLTF
 
 				if (IsTextureFlipped(textureId.Value))
 				{
-					offset.y =  scale.y + offset.y;
+					offset.y = scale.y + offset.y;
 					scale.y *= -1f;
 				}
 				else
@@ -107,7 +107,7 @@ namespace UnityGLTF
 			if (Context.SourceImporter == null)
 #endif
 			mapper.Material.SetFloat("_NormalMapFormatXYZ", 1);
-			
+
 			void SetTransformKeyword()
 			{
 				MatHelper.SetKeyword(mapper.Material, "_TEXTURE_TRANSFORM", true);
@@ -140,7 +140,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						mrMapper.BaseColorXScale = new Vector2(1f,-1f);
+						mrMapper.BaseColorXScale = new Vector2(1f, -1f);
 						mrMapper.BaseColorXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -168,7 +168,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						mrMapper.MetallicRoughnessXScale = new Vector2(1f,-1f);
+						mrMapper.MetallicRoughnessXScale = new Vector2(1f, -1f);
 						mrMapper.MetallicRoughnessXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -180,7 +180,7 @@ namespace UnityGLTF
 				mrMapper.MetallicFactor = 1;
 				mrMapper.RoughnessFactor = 1;
 			}
-			
+
 			// get MaterialImportPluginContext and check which options are enabled
 			// ReSharper disable InconsistentNaming IdentifierTypo
 			var settings = (Context.Plugins.FirstOrDefault(x => x is MaterialExtensionsImportContext) as MaterialExtensionsImportContext)?.settings;
@@ -193,7 +193,7 @@ namespace UnityGLTF
 			var KHR_materials_pbrSpecularGlossiness = settings && settings.KHR_materials_pbrSpecularGlossiness;
 			var KHR_materials_emissive_strength = settings && settings.KHR_materials_emissive_strength;
 			// ReSharper restore InconsistentNaming
-			
+
 			var sgMapper = mapper as ISpecGlossUniformMap;
 			if (sgMapper != null && KHR_materials_pbrSpecularGlossiness)
 			{
@@ -221,7 +221,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						sgMapper.DiffuseXScale = new Vector2(1f,-1f);
+						sgMapper.DiffuseXScale = new Vector2(1f, -1f);
 						sgMapper.DiffuseXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -249,7 +249,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						sgMapper.SpecularGlossinessXScale = new Vector2(1f,-1f);
+						sgMapper.SpecularGlossinessXScale = new Vector2(1f, -1f);
 						sgMapper.SpecularGlossinessXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -281,7 +281,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						unlitMapper.BaseColorXScale = new Vector2(1f,-1f);
+						unlitMapper.BaseColorXScale = new Vector2(1f, -1f);
 						unlitMapper.BaseColorXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -323,7 +323,7 @@ namespace UnityGLTF
 						}
 						else if (IsTextureFlipped(transmission.transmissionTexture.Index.Value))
 						{
-							transmissionMapper.TransmissionTextureScale = new Vector2(1f,-1f);
+							transmissionMapper.TransmissionTextureScale = new Vector2(1f, -1f);
 							transmissionMapper.TransmissionTextureOffset = new Vector2(0f, 1f);
 							SetTransformKeyword();
 						}
@@ -345,7 +345,7 @@ namespace UnityGLTF
 					{
 						mapper.Material.EnableKeyword("_VOLUME_TRANSMISSION_ANDDISPERSION");
 						mapper.Material.SetFloat("_VOLUME_TRANSMISSION", 2f);
-						
+
 					}
 					else
 					{
@@ -381,7 +381,7 @@ namespace UnityGLTF
 						}
 						else if (IsTextureFlipped(volume.thicknessTexture.Index.Value))
 						{
-							volumeMapper.ThicknessTextureScale = new Vector2(1f,-1f);
+							volumeMapper.ThicknessTextureScale = new Vector2(1f, -1f);
 							volumeMapper.ThicknessTextureOffset = new Vector2(0f, 1f);
 							SetTransformKeyword();
 						}
@@ -419,7 +419,7 @@ namespace UnityGLTF
 						}
 						else if (IsTextureFlipped(iridescence.iridescenceTexture.Index.Value))
 						{
-							iridescenceMapper.IridescenceTextureScale = new Vector2(1f,-1f);
+							iridescenceMapper.IridescenceTextureScale = new Vector2(1f, -1f);
 							iridescenceMapper.IridescenceTextureOffset = new Vector2(0f, 1f);
 							SetTransformKeyword();
 						}
@@ -576,9 +576,9 @@ namespace UnityGLTF
 						if (clearcoat.clearcoatNormalTexture != null)
 						{
 							var td = await FromTextureInfo(clearcoat.clearcoatNormalTexture, false);
-							
+
 							_runtimeNormalTextures.Add(td.Texture);
-							
+
 							clearcoatNormalMapper.ClearcoatNormalTexture = td.Texture;
 							clearcoatNormalMapper.ClearcoatNormalTextureTexCoord = td.TexCoord;
 							var ext = GetTextureTransform(clearcoat.clearcoatNormalTexture);
@@ -613,13 +613,13 @@ namespace UnityGLTF
 				{
 					TextureId textureId = def.NormalTexture.Index;
 					await ConstructTexture(textureId.Value, textureId.Id, !KeepCPUCopyOfTexture, true, true);
-					
+
 					uniformMapper.NormalTexture = _assetCache.TextureCache[textureId.Id].Texture;
 					uniformMapper.NormalTexCoord = def.NormalTexture.TexCoord;
 					uniformMapper.NormalTexScale = def.NormalTexture.Scale;
 
 					_runtimeNormalTextures.Add(uniformMapper.NormalTexture);
-					
+
 					var ext = GetTextureTransform(def.NormalTexture);
 					if (ext != null)
 					{
@@ -632,7 +632,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						uniformMapper.NormalXScale = new Vector2(1f,-1f);
+						uniformMapper.NormalXScale = new Vector2(1f, -1f);
 						uniformMapper.NormalXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -657,7 +657,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						uniformMapper.EmissiveXScale = new Vector2(1f,-1f);
+						uniformMapper.EmissiveXScale = new Vector2(1f, -1f);
 						uniformMapper.EmissiveXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -684,7 +684,7 @@ namespace UnityGLTF
 					}
 					else if (IsTextureFlipped(textureId.Value))
 					{
-						uniformMapper.OcclusionXScale = new Vector2(1f,-1f);
+						uniformMapper.OcclusionXScale = new Vector2(1f, -1f);
 						uniformMapper.OcclusionXOffset = new Vector2(0f, 1f);
 						SetTransformKeyword();
 					}
@@ -729,7 +729,7 @@ namespace UnityGLTF
 			}
 		}
 
-		protected virtual Task ConstructMaterialImageBuffers(GLTFMaterial def)
+		protected virtual Task ConstructMaterialImageBuffers(GLTFMaterial def, bool importFromFirebaseStorage)
 		{
 			var tasks = new List<Task>(8);
 			if (def.PbrMetallicRoughness != null)
@@ -739,13 +739,13 @@ namespace UnityGLTF
 				if (pbr.BaseColorTexture != null)
 				{
 					var textureId = pbr.BaseColorTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 				if (pbr.MetallicRoughnessTexture != null)
 				{
 					var textureId = pbr.MetallicRoughnessTexture.Index;
 
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
@@ -755,14 +755,14 @@ namespace UnityGLTF
 				{
 					var textureId = def.CommonConstant.LightmapTexture.Index;
 
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
 			if (def.NormalTexture != null)
 			{
 				var textureId = def.NormalTexture.Index;
-				tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+				tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 			}
 
 			if (def.OcclusionTexture != null)
@@ -773,14 +773,14 @@ namespace UnityGLTF
 						&& def.PbrMetallicRoughness.MetallicRoughnessTexture != null
 						&& def.PbrMetallicRoughness.MetallicRoughnessTexture.Index.Id == textureId.Id))
 				{
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
 			if (def.EmissiveTexture != null)
 			{
 				var textureId = def.EmissiveTexture.Index;
-				tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+				tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 			}
 
 			// pbr_spec_gloss extension
@@ -791,13 +791,13 @@ namespace UnityGLTF
 				if (specGlossDef.DiffuseTexture != null)
 				{
 					var textureId = specGlossDef.DiffuseTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 
 				if (specGlossDef.SpecularGlossinessTexture != null)
 				{
 					var textureId = specGlossDef.SpecularGlossinessTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
@@ -807,7 +807,7 @@ namespace UnityGLTF
 				if (transmissionDef.transmissionTexture != null)
 				{
 					var textureId = transmissionDef.transmissionTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
@@ -817,58 +817,58 @@ namespace UnityGLTF
 				if (transmissionDef.thicknessTexture != null)
 				{
 					var textureId = transmissionDef.thicknessTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
 			if (def.Extensions != null && def.Extensions.ContainsKey(KHR_materials_iridescence_Factory.EXTENSION_NAME))
 			{
-				var iridescenceDef = (KHR_materials_iridescence) def.Extensions[KHR_materials_iridescence_Factory.EXTENSION_NAME];
+				var iridescenceDef = (KHR_materials_iridescence)def.Extensions[KHR_materials_iridescence_Factory.EXTENSION_NAME];
 				if (iridescenceDef.iridescenceTexture != null)
 				{
 					var textureId = iridescenceDef.iridescenceTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 				if (iridescenceDef.iridescenceThicknessTexture != null)
 				{
 					var textureId = iridescenceDef.iridescenceThicknessTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
 			if (def.Extensions != null && def.Extensions.ContainsKey(KHR_materials_specular_Factory.EXTENSION_NAME))
 			{
-				var specularDef = (KHR_materials_specular) def.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME];
+				var specularDef = (KHR_materials_specular)def.Extensions[KHR_materials_specular_Factory.EXTENSION_NAME];
 				if (specularDef.specularTexture != null)
 				{
 					var textureId = specularDef.specularTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 				if (specularDef.specularColorTexture != null)
 				{
 					var textureId = specularDef.specularColorTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
 
 			if (def.Extensions != null && def.Extensions.ContainsKey(KHR_materials_clearcoat_Factory.EXTENSION_NAME))
 			{
-				var clearCoatDef = (KHR_materials_clearcoat) def.Extensions[KHR_materials_clearcoat_Factory.EXTENSION_NAME];
+				var clearCoatDef = (KHR_materials_clearcoat)def.Extensions[KHR_materials_clearcoat_Factory.EXTENSION_NAME];
 				if (clearCoatDef.clearcoatTexture != null)
 				{
 					var textureId = clearCoatDef.clearcoatTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 				if (clearCoatDef.clearcoatNormalTexture != null)
 				{
 					var textureId = clearCoatDef.clearcoatNormalTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 				if (clearCoatDef.clearcoatRoughnessTexture != null)
 				{
 					var textureId = clearCoatDef.clearcoatRoughnessTexture.Index;
-					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id));
+					tasks.Add(ConstructImageBuffer(textureId.Value, textureId.Id, importFromFirebaseStorage));
 				}
 			}
 
@@ -891,9 +891,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_emissive_strength GetEmissiveStrength(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_emissive_strength_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_emissive_strength_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_emissive_strength) extension;
+				return (KHR_materials_emissive_strength)extension;
 			}
 			return null;
 		}
@@ -901,19 +901,19 @@ namespace UnityGLTF
 		protected virtual KHR_materials_transmission GetTransmission(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_transmission_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_transmission_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_transmission_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_transmission) extension;
+				return (KHR_materials_transmission)extension;
 			}
 			return null;
 		}
-		
+
 		protected virtual KHR_materials_dispersion GetDispersion(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_dispersion_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_dispersion_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_dispersion_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_dispersion) extension;
+				return (KHR_materials_dispersion)extension;
 			}
 			return null;
 		}
@@ -922,9 +922,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_volume GetVolume(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_volume_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_volume_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_volume_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_volume) extension;
+				return (KHR_materials_volume)extension;
 			}
 			return null;
 		}
@@ -932,9 +932,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_ior GetIOR(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_ior_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_ior_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_ior_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_ior) extension;
+				return (KHR_materials_ior)extension;
 			}
 			return null;
 		}
@@ -942,9 +942,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_iridescence GetIridescence(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_iridescence_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_iridescence_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_iridescence_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_iridescence) extension;
+				return (KHR_materials_iridescence)extension;
 			}
 			return null;
 		}
@@ -952,9 +952,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_specular GetSpecular(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_specular_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_specular_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_specular_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_specular) extension;
+				return (KHR_materials_specular)extension;
 			}
 			return null;
 		}
@@ -962,9 +962,9 @@ namespace UnityGLTF
 		protected virtual KHR_materials_clearcoat GetClearcoat(GLTFMaterial def)
 		{
 			if (_gltfRoot.ExtensionsUsed != null && _gltfRoot.ExtensionsUsed.Contains(KHR_materials_clearcoat_Factory.EXTENSION_NAME) &&
-			    def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_clearcoat_Factory.EXTENSION_NAME, out var extension))
+					def.Extensions != null && def.Extensions.TryGetValue(KHR_materials_clearcoat_Factory.EXTENSION_NAME, out var extension))
 			{
-				return (KHR_materials_clearcoat) extension;
+				return (KHR_materials_clearcoat)extension;
 			}
 			return null;
 		}

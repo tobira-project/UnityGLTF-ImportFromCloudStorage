@@ -56,9 +56,9 @@ namespace UnityGLTF.Loader
 				relativeIndex++;
 			}
 
-			return string.Join("/", baseParts, 0, Mathf.Min(  baseParts.Length,baseIndex+1));
+			return string.Join("/", baseParts, 0, Mathf.Min(baseParts.Length, baseIndex + 1));
 		}
-		public Task<Stream> LoadStreamAsync(string relativeFilePath)
+		public Task<Stream> LoadStreamAsync(string relativeFilePath, bool importFromFirebaseStorage = false)
 		{
 #if UNITY_EDITOR
 			string path = CombinePaths(_rootDirectoryPath, relativeFilePath);
@@ -115,7 +115,7 @@ namespace UnityGLTF.Loader
 			return File.OpenRead(pathToLoad);
 		}
 
-		internal class InvalidStream: MemoryStream
+		internal class InvalidStream : MemoryStream
 		{
 			public readonly string RelativeFilePath;
 			public readonly string RootDirectory;

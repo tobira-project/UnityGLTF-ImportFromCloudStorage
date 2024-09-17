@@ -31,13 +31,13 @@ namespace UnityGLTF
 			public Task<DecodeResult>[] decodeResults = new Task<DecodeResult>[0];
 		}		
 #endif
-		
+
 		private async Task CreateMaterials(MeshPrimitive primitive)
 		{
 			bool shouldUseDefaultMaterial = primitive.Material == null;
 			GLTFMaterial materialToLoad = shouldUseDefaultMaterial ? DefaultMaterial : primitive.Material.Value;
 			if ((shouldUseDefaultMaterial && _defaultLoadedMaterial == null) ||
-			    (!shouldUseDefaultMaterial && _assetCache.MaterialCache[primitive.Material.Id] == null))
+					(!shouldUseDefaultMaterial && _assetCache.MaterialCache[primitive.Material.Id] == null))
 			{
 				await ConstructMaterial(materialToLoad, shouldUseDefaultMaterial ? -1 : primitive.Material.Id);
 			}
@@ -91,14 +91,14 @@ namespace UnityGLTF
 			}
 #endif
 
-			var firstPrim = mesh.Primitives.Count > 0 ?  mesh.Primitives[0] : null;
+			var firstPrim = mesh.Primitives.Count > 0 ? mesh.Primitives[0] : null;
 			cancellationToken.ThrowIfCancellationRequested();
 
 
 			var meshCache = _assetCache.MeshCache[meshIndex];
 
 			var unityData = CreateUnityMeshData(mesh, meshIndex, firstPrim);
-			
+
 			for (int i = 0; i < mesh.Primitives.Count; ++i)
 			{
 				var primitive = mesh.Primitives[i];
@@ -111,7 +111,7 @@ namespace UnityGLTF
 				await CreateMaterials(primitive);
 
 				cancellationToken.ThrowIfCancellationRequested();
-				
+
 				if (unityData.Topology[i] == MeshTopology.Triangles && primitive.Indices != null && primitive.Indices.Value != null)
 				{
 					Statistics.TriangleCount += primitive.Indices.Value.Count / 3;
@@ -153,7 +153,7 @@ namespace UnityGLTF
 		{
 			if (_gltfRoot.Meshes == null)
 				return;
-			
+
 			for (int i = 0; i < _gltfRoot.Meshes.Count(); i++)
 			{
 				int meshIndex = i;
@@ -173,7 +173,7 @@ namespace UnityGLTF
 				}
 			}
 		}
-		
+
 #if HAVE_DRACO
 		protected virtual async Task PrepareDracoMesh(GLTFMesh mesh, int meshIndex)
 		{
@@ -403,7 +403,7 @@ namespace UnityGLTF
 				else if (_options.ImportTangents != GLTFImporterNormals.None && mesh.normals.Length == 0)
 					mesh.RecalculateNormals();
 			}
-		
+
 			if (_options.ImportTangents == GLTFImporterNormals.None)
 				mesh.tangents = Array.Empty<Vector4>();
 			else
@@ -420,7 +420,7 @@ namespace UnityGLTF
 				var uv = mesh.uv;
 				var uv2 = mesh.uv2;
 				mesh.uv = uv2;
-				if(uv.Length > 0)
+				if (uv.Length > 0)
 					mesh.uv2 = uv;
 			}
 		}
@@ -564,8 +564,8 @@ namespace UnityGLTF
 
 			for (int i = 0; i < unityMeshData.subMeshDataCreated.Length; i++)
 				unityMeshData.subMeshDataCreated[i] = false;
-			
-			
+
+
 			if (firstPrim.Targets != null)
 			{
 				unityMeshData.MorphTargetVertices = new Vector3[firstPrim.Targets.Count][];
@@ -582,14 +582,14 @@ namespace UnityGLTF
 							for (int j = 0; j < verticesLength; j++)
 								unityMeshData.MorphTargetVertices[i][j] = Vector3.zero;
 						}
-						
+
 						if (unityMeshData.MorphTargetNormals[i] == null && prim.Targets[i].ContainsKey(SemanticProperties.NORMAL))
 						{
 							unityMeshData.MorphTargetNormals[i] = new Vector3[verticesLength];
 							for (int j = 0; j < verticesLength; j++)
 								unityMeshData.MorphTargetNormals[i][j] = Vector3.zero;
 						}
-						
+
 						if (unityMeshData.MorphTargetTangents[i] == null && prim.Targets[i].ContainsKey(SemanticProperties.TANGENT))
 						{
 							unityMeshData.MorphTargetTangents[i] = new Vector3[verticesLength];
@@ -599,7 +599,7 @@ namespace UnityGLTF
 					}
 				}
 			}
-			
+
 			_assetCache.UnityMeshDataCache[meshIndex] = unityMeshData;
 
 			if (!onlyMorphTargets)
@@ -691,7 +691,7 @@ namespace UnityGLTF
 			}
 
 			_assetCache.MeshCache[meshIndex].LoadedMesh = mesh;
-			
+
 			// Free up some memory
 			unityMeshData.Clear();
 		}
@@ -779,8 +779,8 @@ namespace UnityGLTF
 #if UNITY_EDITOR
 			hasScale = Context != null && !Mathf.Approximately(Context.ImportScaleFactor, 1f);
 			scaleFactor = hasScale ? Context.ImportScaleFactor : 1f;
-#endif	
-			
+#endif
+
 			var newTargets = _assetCache.MeshCache[meshIndex].Primitives[primitiveIndex].Targets;
 			for (int i = 0; i < primitive.Targets.Count; i++)
 			{
@@ -863,7 +863,7 @@ namespace UnityGLTF
 							break;
 					}
 				}
-				
+
 				GLTFHelpers.BuildTargetAttributes(ref att, scaleFactor);
 
 				if (sparseNormals != null)
@@ -913,7 +913,7 @@ namespace UnityGLTF
 		{
 			if (_gltfRoot.Meshes == null)
 				return;
-			
+
 			for (int meshIndex = 0; meshIndex < _gltfRoot.Meshes.Count; meshIndex++)
 			{
 				var gltfMesh = _gltfRoot.Meshes[meshIndex];
@@ -932,7 +932,7 @@ namespace UnityGLTF
 							t.Value.sparseValues.AccessorContent = new NumericArray();
 							t.Value.sparseIndices.AccessorContent = new NumericArray();
 						}
-						
+
 						foreach (var t in primCache.Targets)
 						{
 							foreach (var att in t)
@@ -949,7 +949,7 @@ namespace UnityGLTF
 		{
 			if (_gltfRoot.Meshes == null)
 				return;
-			
+
 			for (int meshIndex = 0; meshIndex < _gltfRoot.Meshes.Count; meshIndex++)
 			{
 				if (_assetCache.MeshCache[meshIndex] == null)
@@ -962,7 +962,7 @@ namespace UnityGLTF
 					if (gltfMesh.Primitives[i].Targets != null)
 						await ConstructMeshTargetsPrepareBuffers(gltfMesh.Primitives[i], meshIndex, i);
 				}
-				
+
 #if HAVE_DRACO
 				if (Context.TryGetPlugin<DracoImportContext>(out _))
 				{
@@ -1029,23 +1029,23 @@ namespace UnityGLTF
 						if (!primCache.meshAttributesCreated)
 						{
 							primCache.meshAttributesCreated = true;
-							GLTFHelpers.BuildMeshAttributes(ref primCache.Attributes,ref primCache.SparseAccessors);
+							GLTFHelpers.BuildMeshAttributes(ref primCache.Attributes, ref primCache.SparseAccessors);
 							if (gltfMesh.Primitives[primIndex].Targets != null)
 								ConstructMeshTargets(gltfMesh.Primitives[primIndex], meshIndex, primIndex);
 						}
-						
+
 					}
-					
+
 				}
 			}
-			
+
 			if (IsMultithreaded)
 				await Task.Run(BuildMeshesAttributes);
 			else
 				BuildMeshesAttributes();
 		}
 
-		private async Task ConstructMeshAttributes(GLTFMesh mesh, MeshId meshId)
+		private async Task ConstructMeshAttributes(GLTFMesh mesh, MeshId meshId, bool importFromFirebaseStorage)
 		{
 			int meshIndex = meshId.Id;
 
@@ -1070,23 +1070,23 @@ namespace UnityGLTF
 						ConstructMeshTargets(primitive, meshIndex, i);
 					}
 				}
-				
+
 				if (primitive.Material != null)
 				{
-					await ConstructMaterialImageBuffers(primitive.Material.Value);
+					await ConstructMaterialImageBuffers(primitive.Material.Value, importFromFirebaseStorage);
 				}
-	
+
 			}
 		}
-		
+
 		protected virtual async Task ConstructPrimitiveAttributes(MeshPrimitive primitive, int meshIndex, int primitiveIndex)
 		{
-			if (_assetCache.MeshCache[meshIndex].Primitives.Count-1 >= primitiveIndex)
+			if (_assetCache.MeshCache[meshIndex].Primitives.Count - 1 >= primitiveIndex)
 				return;
-			
+
 			var primData = new MeshCacheData.PrimitiveCacheData();
 			_assetCache.MeshCache[meshIndex].Primitives.Add(primData);
-				
+
 			foreach (var attributePair in primitive.Attributes)
 			{
 				if (attributePair.Value.Value.BufferView == null) // When Draco Compression is used, the bufferView is null
@@ -1096,7 +1096,7 @@ namespace UnityGLTF
 				{
 					var bufferId = attributePair.Value.Value.BufferView.Value.Buffer;
 					var bufferData = await GetBufferData(bufferId);
-					
+
 					primData.Attributes[attributePair.Key] = new AttributeAccessor
 					{
 						AccessorId = attributePair.Value,
@@ -1104,7 +1104,7 @@ namespace UnityGLTF
 						Offset = (uint)bufferData.ChunkOffset
 					};
 				}
-				
+
 				var sparse = attributePair.Value.Value.Sparse;
 				if (sparse != null)
 				{
@@ -1192,7 +1192,7 @@ namespace UnityGLTF
 						indices = MeshPrimitive.ConvertTriangleFanToTriangles(indices);
 						SchemaExtensions.FlipTriangleFaces(indices);
 						break;
-				}				
+				}
 			}
 			else
 			{
@@ -1227,10 +1227,10 @@ namespace UnityGLTF
 
 			// Only add weight/joint data when it's not already added to the unity mesh data !
 			if (meshAttributes.ContainsKey(SemanticProperties.Weight[0]) && meshAttributes.ContainsKey(SemanticProperties.Joint[0])
-			    && !unityData.alreadyAddedAccessors.Contains(meshAttributes[SemanticProperties.Weight[0]].AccessorId.Id))
+					&& !unityData.alreadyAddedAccessors.Contains(meshAttributes[SemanticProperties.Weight[0]].AccessorId.Id))
 			{
 				unityData.alreadyAddedAccessors.Add(meshAttributes[SemanticProperties.Weight[0]].AccessorId.Id);
-				
+
 				CreateBoneWeightArray(
 					meshAttributes[SemanticProperties.Joint[0]].AccessorContent.AsFloat4s.ToUnityVector4Raw(),
 					meshAttributes[SemanticProperties.Weight[0]].AccessorContent.AsFloat4s.ToUnityVector4Raw(),
@@ -1241,7 +1241,7 @@ namespace UnityGLTF
 			// Only add vertex data when it's not already added to the unity mesh data !
 			if (meshAttributes.ContainsKey(SemanticProperties.POSITION) && !unityData.alreadyAddedAccessors.Contains(meshAttributes[SemanticProperties.POSITION].AccessorId.Id))
 			{
-				
+
 				if (meshAttributes.TryGetValue(SemanticProperties.POSITION, out var attrPos))
 				{
 					unityData.alreadyAddedAccessors.Add(attrPos.AccessorId.Id);
@@ -1328,8 +1328,8 @@ namespace UnityGLTF
 
 		private static void AddNewBufferAndViewToAccessor(byte[] data, Accessor accessor, GLTFRoot _gltfRoot)
 		{
-			_gltfRoot.Buffers.Add(new GLTFBuffer() { ByteLength = (uint) data.Length });
-			_gltfRoot.BufferViews.Add(new BufferView() { ByteLength = (uint) data.Length, ByteOffset = 0, Buffer = new BufferId() { Id = _gltfRoot.Buffers.Count, Root = _gltfRoot } });
+			_gltfRoot.Buffers.Add(new GLTFBuffer() { ByteLength = (uint)data.Length });
+			_gltfRoot.BufferViews.Add(new BufferView() { ByteLength = (uint)data.Length, ByteOffset = 0, Buffer = new BufferId() { Id = _gltfRoot.Buffers.Count, Root = _gltfRoot } });
 			accessor.BufferView = new BufferViewId() { Id = _gltfRoot.BufferViews.Count - 1, Root = _gltfRoot };
 		}
 

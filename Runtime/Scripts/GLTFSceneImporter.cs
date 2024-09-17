@@ -57,6 +57,8 @@ namespace UnityGLTF
 
 		[NonSerialized]
 		public ILogger logger;
+
+		public bool ImportFromFirebaseStorage = false;
 	}
 
 	public enum CameraImportOption
@@ -65,7 +67,7 @@ namespace UnityGLTF
 		ImportAndActive,
 		ImportAndCameraDisabled
 	}
-	
+
 	public enum AnimationMethod
 	{
 		None,
@@ -94,10 +96,10 @@ namespace UnityGLTF
 		public MeshTopology[] Topology;
 		public DrawMode[] DrawModes;
 		public int[][] Indices;
-		
+
 		public HashSet<int> alreadyAddedAccessors = new HashSet<int>();
 		public uint[] subMeshVertexOffset;
-		
+
 		public void Clear()
 		{
 			Vertices = null;
@@ -248,7 +250,7 @@ namespace UnityGLTF
 		public GameObject[] NodeCache => _assetCache.NodeCache;
 		public MeshCacheData[] MeshCache => _assetCache.MeshCache;
 
-		private Dictionary<Stream, NativeArray<byte>> _nativeBuffers = new Dictionary<Stream, NativeArray<byte>>(); 
+		private Dictionary<Stream, NativeArray<byte>> _nativeBuffers = new Dictionary<Stream, NativeArray<byte>>();
 #if HAVE_MESHOPT_DECOMPRESS
 		private List<NativeArray<byte>> meshOptNativeBuffers = new List<NativeArray<byte>>();
 #endif
@@ -301,14 +303,14 @@ namespace UnityGLTF
 		protected GLTFRoot _gltfRoot;
 		protected AssetCache _assetCache;
 		protected bool _isRunning = false;
-		
+
 		protected ImportProgress progressStatus = default(ImportProgress);
 		protected IProgress<ImportProgress> progress = null;
 
 		private static ILogger Debug = UnityEngine.Debug.unityLogger;
 
-		protected ColorSpace _activeColorSpace; 
-		
+		protected ColorSpace _activeColorSpace;
+
 		public GLTFSceneImporter(string gltfFileName, ImportOptions options) : this(options)
 		{
 			_gltfFileName = gltfFileName;
@@ -334,12 +336,12 @@ namespace UnityGLTF
 			{
 				options.ImportContext.SceneImporter = this;
 			}
-			
+
 			if (options.logger != null)
 				Debug = options.logger;
 			else
 				Debug = UnityEngine.Debug.unityLogger;
-			
+
 			DefaultMaterial = new GLTFMaterial
 			{
 				Name = "Default",
@@ -347,12 +349,12 @@ namespace UnityGLTF
 				DoubleSided = false,
 				PbrMetallicRoughness = new PbrMetallicRoughness
 				{
-					MetallicFactor = 1, 
+					MetallicFactor = 1,
 					RoughnessFactor = 1,
 				}
 			};
-			
-			_activeColorSpace = QualitySettings.activeColorSpace; 
+
+			_activeColorSpace = QualitySettings.activeColorSpace;
 			_options = options;
 		}
 
@@ -377,12 +379,12 @@ namespace UnityGLTF
 				{
 					throw new Exception($"Unexpected end of stream while loading buffer view (File: {_gltfFileName})");
 				}
-			}			
-			
+			}
+
 			var newNativeBuffer = new NativeArray<byte>(buf, Allocator.Persistent);
-			
-			_nativeBuffers.Add(stream,newNativeBuffer);
-			
+
+			_nativeBuffers.Add(stream, newNativeBuffer);
+
 			return newNativeBuffer;
 		}
 
@@ -392,7 +394,9 @@ namespace UnityGLTF
 			{
 				if (_options.ExternalDataLoader == null)
 				{
-					_options.DataLoader = new UnityWebRequestLoader(URIHelper.GetDirectoryName(_gltfFileName));
+					_options.DataLoader = new UnityWebRequestLoader(
+						URIHelper.GetDirectoryName(_gltfFileName, _options.ImportFromFirebaseStorage)
+					);
 					_gltfFileName = URIHelper.GetFileFromUri(new Uri(_gltfFileName));
 				}
 				else
@@ -427,7 +431,7 @@ namespace UnityGLTF
 
 					_isRunning = true;
 				}
-				
+
 				// TODO check where the right place is to call OnBeforeImport as early as possible
 				foreach (var plugin in Context.Plugins)
 				{
@@ -518,7 +522,7 @@ namespace UnityGLTF
 			{
 				if (TextureCache[i] == null)
 				{
-					await CreateNotReferencedTexture(i);
+					await CreateNotReferencedTexture(i, _options.ImportFromFirebaseStorage);
 				}
 			}
 
@@ -528,7 +532,7 @@ namespace UnityGLTF
 				if (_assetCache.MaterialCache[index] == null)
 				{
 					var def = _gltfRoot.Materials[index];
-					await ConstructMaterialImageBuffers(def);
+					await ConstructMaterialImageBuffers(def, _options.ImportFromFirebaseStorage);
 					await ConstructMaterial(def, index);
 				}
 			}
@@ -570,7 +574,7 @@ namespace UnityGLTF
 				if (_assetCache.MaterialCache[materialIndex] == null)
 				{
 					var def = _gltfRoot.Materials[materialIndex];
-					await ConstructMaterialImageBuffers(def);
+					await ConstructMaterialImageBuffers(def, _options.ImportFromFirebaseStorage);
 					await ConstructMaterial(def, materialIndex);
 				}
 			});
@@ -594,7 +598,7 @@ namespace UnityGLTF
 				if (_assetCache.MeshCache[meshIndex] == null)
 				{
 					var def = _gltfRoot.Meshes[meshIndex];
-					await ConstructMeshAttributes(def, new MeshId() { Id = meshIndex, Root = _gltfRoot });
+					await ConstructMeshAttributes(def, new MeshId() { Id = meshIndex, Root = _gltfRoot }, _options.ImportFromFirebaseStorage);
 					await ConstructMesh(def, meshIndex, cancellationToken);
 				}
 			});
@@ -615,7 +619,7 @@ namespace UnityGLTF
 			else
 #endif
 			{
-				_gltfStream.Stream = await _options.DataLoader.LoadStreamAsync(jsonFilePath);
+				_gltfStream.Stream = await _options.DataLoader.LoadStreamAsync(jsonFilePath, _options.ImportFromFirebaseStorage);
 			}
 
 			_gltfStream.StartPosition = 0;
@@ -701,7 +705,7 @@ namespace UnityGLTF
 
 			// Free up some Memory, Accessor contents are no longer needed
 			FreeUpAccessorContents();
-			
+
 			await ConstructScene(scene, showSceneObj, cancellationToken);
 
 			if (SceneParent != null)
@@ -814,9 +818,9 @@ namespace UnityGLTF
 					// HACK belongs in an extension, but we don't have Importer callbacks yet
 					const string msft_LODExtName = MSFT_LODExtensionFactory.EXTENSION_NAME;
 					if (_gltfRoot.ExtensionsUsed != null
-					    && _gltfRoot.ExtensionsUsed.Contains(msft_LODExtName)
-					    && node.Extensions != null
-					    && node.Extensions.ContainsKey(msft_LODExtName))
+							&& _gltfRoot.ExtensionsUsed.Contains(msft_LODExtName)
+							&& node.Extensions != null
+							&& node.Extensions.ContainsKey(msft_LODExtName))
 					{
 						var lodsExtension = node.Extensions[msft_LODExtName] as MSFT_LODExtension;
 						if (lodsExtension != null && lodsExtension.NodeIds.Count > 0)
@@ -853,11 +857,11 @@ namespace UnityGLTF
 				throw;
 			}
 		}
-		
+
 		private async Task<(Vector3, Quaternion, Vector3)[]> GetInstancesTRS(Node node)
 		{
 			if (Context.TryGetPlugin<GPUInstancingImportContext>(out _) && node.Extensions != null &&
-			    node.Extensions.TryGetValue(EXT_mesh_gpu_instancing_Factory.EXTENSION_NAME, out var ext))
+					node.Extensions.TryGetValue(EXT_mesh_gpu_instancing_Factory.EXTENSION_NAME, out var ext))
 			{
 				AttributeAccessor positionsAttr = null;
 				AttributeAccessor rotationAttr = null;
@@ -867,16 +871,16 @@ namespace UnityGLTF
 				async Task<AttributeAccessor> GetAttrAccessorAndAccessorContent(AccessorId accessorId, bool isPosition = false)
 				{
 					var accessor = _gltfRoot.Accessors[accessorId.Id];
-					
+
 					var bufferId = accessor.BufferView.Value.Buffer;
 					var bufferData = await GetBufferData(bufferId);
-					
+
 					var attrAccessor = new AttributeAccessor
 					{
 						AccessorId = accessorId,
 						bufferData = bufferData.bufferData,
 						Offset = (uint)bufferData.ChunkOffset
-					};					
+					};
 					GLTFHelpers.LoadBufferView(accessor.BufferView.Value, attrAccessor.Offset, attrAccessor.bufferData, out var bufferViewCache);
 					NumericArray resultArray = attrAccessor.AccessorContent;
 					switch (accessor.Type)
@@ -930,7 +934,7 @@ namespace UnityGLTF
 					List<(Vector3, Quaternion, Vector3)> instancesTRS = new List<(Vector3, Quaternion, Vector3)>(instancesCount);
 					for (int i = 0; i < instancesCount; i++)
 					{
-						instancesTRS.Add(( 
+						instancesTRS.Add((
 								positionsAttr != null ? positionsAttr.AccessorContent.AsFloat3s[i].ToUnityVector3Raw() : Vector3.zero,
 								rotationAttr != null ? rotationAttr.AccessorContent.AsFloat4s[i].ToUnityQuaternionConvert() : Quaternion.identity,
 								scaleAttr != null ? scaleAttr.AccessorContent.AsFloat3s[i].ToUnityVector3Raw() : Vector3.one
@@ -941,7 +945,7 @@ namespace UnityGLTF
 			}
 			return null;
 		}
-		
+
 		protected virtual async Task ConstructNode(Node node, int nodeIndex, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -1050,7 +1054,7 @@ namespace UnityGLTF
 					nodeObj.SetActive(true);
 					return;
 				}
-				
+
 				await ConstructLods(_gltfRoot, nodeObj, node, nodeIndex, cancellationToken);
 
 				var hasLight = ConstructLights(nodeObj, node);
@@ -1065,7 +1069,7 @@ namespace UnityGLTF
 				if ((hasLight || hasCamera) && nodeObj.transform.childCount > 0 && node.Children?.Count > 0)
 				{
 					var flipQuaternion = Quaternion.Inverse(SchemaExtensions.InvertDirection);
-					
+
 					// Special case for hierarchy simplification and roundtrips: if we have
 					// - exactly one child
 					// - that's flipped 180°
@@ -1078,9 +1082,9 @@ namespace UnityGLTF
 					var firstNode = node.Children?.FirstOrDefault()?.Value;
 					var firstChild = nodeObj.transform.GetChild(0);
 					if (nodeObj.transform.childCount == 1 && node.Children?.Count == 1 &&
-					    (firstNode.Extensions == null || !firstNode.Extensions.Any()) &&
-					    firstChild.GetComponents<Component>().Length == 1 &&
-					    Quaternion.Angle(firstChild.localRotation, flipQuaternion) < 0.1f)
+							(firstNode.Extensions == null || !firstNode.Extensions.Any()) &&
+							firstChild.GetComponents<Component>().Length == 1 &&
+							Quaternion.Angle(firstChild.localRotation, flipQuaternion) < 0.1f)
 					{
 						firstChild.localRotation *= flipQuaternion;
 						var childCount = firstChild.childCount;
@@ -1111,10 +1115,10 @@ namespace UnityGLTF
 						inbetween.transform.localRotation = Quaternion.Inverse(SchemaExtensions.InvertDirection);
 					}
 				}
-				
+
 				nodeObj.SetActive(true);
 			}
-						
+
 			var instancesTRS = await GetInstancesTRS(node);
 
 			if (instancesTRS == null || instancesTRS.Length == 0)
@@ -1136,7 +1140,7 @@ namespace UnityGLTF
 						nodeObj.transform.SetParent(instanceParentNode.transform, false);
 						await CreateNodeComponentsAndChilds(false, true);
 						firstInstance = nodeObj;
-						
+
 						var renderers = firstInstance.GetComponentsInChildren<Renderer>();
 						foreach (var renderer in renderers)
 							foreach (var sh in renderer.sharedMaterials)
@@ -1158,11 +1162,11 @@ namespace UnityGLTF
 				}
 				instanceParentNode.gameObject.SetActive(true);
 			}
-			
+
 			progressStatus.NodeLoaded++;
 			progress?.Report(progressStatus);
 		}
-		
+
 		private async Task ConstructBufferData(Node node, CancellationToken cancellationToken)
 		{
 			cancellationToken.ThrowIfCancellationRequested();
@@ -1172,7 +1176,7 @@ namespace UnityGLTF
 			{
 				if (mesh.Value.Primitives != null)
 				{
-					await ConstructMeshAttributes(mesh.Value, mesh);
+					await ConstructMeshAttributes(mesh.Value, mesh, _options.ImportFromFirebaseStorage);
 				}
 			}
 
@@ -1189,7 +1193,7 @@ namespace UnityGLTF
 		{
 			if (_assetCache.BufferCache[bufferIndex] != null)
 				return;
-			
+
 #if HAVE_MESHOPT_DECOMPRESS
 			if (buffer.Extensions != null && buffer.Extensions.ContainsKey(EXT_meshopt_compression_Factory.EXTENSION_NAME))
 			{
@@ -1207,7 +1211,7 @@ namespace UnityGLTF
 			}
 #else
 			if (buffer.Extensions != null &&
-			    buffer.Extensions.ContainsKey(EXT_meshopt_compression_Factory.EXTENSION_NAME))
+					buffer.Extensions.ContainsKey(EXT_meshopt_compression_Factory.EXTENSION_NAME))
 			{
 				//TODO: check for fallback URI or Buffer... ?
 				throw new NotSupportedException($"Can't import model because it uses the EXT_meshopt_compression extension. Add the package \"com.unity.meshopt.decompress\" to your project to import this file. (File: {_gltfFileName})");
@@ -1235,7 +1239,7 @@ namespace UnityGLTF
 				}
 				else
 				{
-					bufferDataStream = await _options.DataLoader.LoadStreamAsync(buffer.Uri);
+					bufferDataStream = await _options.DataLoader.LoadStreamAsync(buffer.Uri, _options.ImportFromFirebaseStorage);
 				}
 
 				if (_assetCache.BufferCache[bufferIndex] != null) Debug.Log(LogType.Error, $"_assetCache.BufferCache[bufferIndex] != null; (File: {_gltfFileName})");
@@ -1424,9 +1428,9 @@ namespace UnityGLTF
 			{
 				if (buffer.Value.IsCreated)
 					buffer.Value.Dispose();
-			}			
+			}
 			_nativeBuffers.Clear();
-			
+
 #if HAVE_MESHOPT_DECOMPRESS
 			foreach (var meshOptBuffer in meshOptNativeBuffers)
 			{

@@ -31,7 +31,7 @@ namespace UnityGLTF.Loader
 				_loader = loader;
 			}
 
-			public Task<Stream> LoadStreamAsync(string relativeFilePath)
+			public Task<Stream> LoadStreamAsync(string relativeFilePath, bool allowEncodedSlash = true)
 			{
 				_loader.LoadStream(relativeFilePath);
 				return Task.FromResult(_loader.LoadedStream);
